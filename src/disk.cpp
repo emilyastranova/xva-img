@@ -50,6 +50,13 @@
 
 #include "disk.hpp"
 
+#ifdef _WIN32
+#define fseek _fseeki64
+#define ftell _ftelli64
+#undef ftello
+#define ftello _ftelli64
+#endif
+
 using XVA::Disk;
 
 Disk::Disk(const std::string& path)
@@ -151,7 +158,7 @@ bool Disk::Export(const std::string& diskpath)
 			{
 				fclose(fp);
 				throw std::runtime_error("cannot write " +
-						std::string(path2) + " to output file");
+						std::string(path2) + " to output file: " + strerror(errno));
 			}
 		} else {
 			if (m_sparse)
@@ -161,7 +168,7 @@ bool Disk::Export(const std::string& diskpath)
 				{
 					fclose(fp);
 					throw std::runtime_error("cannot add sparse chunk to " +
-							diskpath);
+							diskpath + ": " + strerror(errno));
 				}
 			} else {
 				std::vector<char> bufnull(1048576, 0);
@@ -169,7 +176,7 @@ bool Disk::Export(const std::string& diskpath)
 				{
 					fclose(fp);
 					throw std::runtime_error("cannot add empty chunk to " +
-							diskpath);
+							diskpath + ": " + strerror(errno));
 				}
 			}
 		}
