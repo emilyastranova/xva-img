@@ -40,6 +40,7 @@
 #include <set>
 #include <errno.h>
 #include <iostream>
+#include <vector>
 
 #include "readfile.hpp"
 #include "writefile.hpp"
@@ -163,8 +164,8 @@ bool Disk::Export(const std::string& diskpath)
 							diskpath);
 				}
 			} else {
-				char bufnull[1048576] = { 0 };
-				if (fwrite(bufnull, 1, sizeof bufnull, fp) != sizeof bufnull)
+				std::vector<char> bufnull(1048576, 0);
+				if (fwrite(bufnull.data(), 1, bufnull.size(), fp) != bufnull.size())
 				{
 					fclose(fp);
 					throw std::runtime_error("cannot add empty chunk to " +
@@ -205,7 +206,7 @@ bool Disk::Import(const std::string& diskpath)
 	if (!fp)
 		throw std::runtime_error("unable to open " + diskpath);
 
-	char buf[1048576];
+	std::vector<char> buf(1048576);
 	fseek(fp, 0, SEEK_END);
 	unsigned long long size = ftello(fp);
 	fseek(fp, 0, SEEK_SET);
@@ -214,19 +215,19 @@ bool Disk::Import(const std::string& diskpath)
 	if (m_verbose)
 		progress.Start();
 
-	char bufnull[1048576] = { 0 };
+	std::vector<char> bufnull(1048576, 0);
 	for (size_t i = 0; ; i++)
 	{
 		if (m_verbose)
 			progress.Update(((float)ftello(fp) / size)*100);
 
-		fread(buf, 1, sizeof buf, fp);
+		fread(buf.data(), 1, buf.size(), fp);
 		if (feof(fp)) break;
 
 		/* skip empty chunks */
 		if ((i > 0 && ftello(fp) < (off_t)size)
 			&& 
-			memcmp(buf, bufnull, sizeof bufnull) == 0)
+			memcmp(buf.data(), bufnull.data(), bufnull.size()) == 0)
 		{
 			continue;
 		}
@@ -235,7 +236,7 @@ bool Disk::Import(const std::string& diskpath)
 		snprintf(path2, sizeof path2, "%08zu", i);
 
 		std::string output;
-		output.append(buf, 1048576);
+		output.append(buf.data(), 1048576);
 
 		if (!XVA::WriteFile(m_path + "/" + path2, output))
 		{

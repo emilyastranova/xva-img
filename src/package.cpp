@@ -73,7 +73,7 @@ void XVAPackage::AddDir(const std::string& path)
 	std::set<std::string> list;
 
 	bool slash = true;
-	if (path.substr(path.size()-1) == "/")
+	if (path.substr(path.size()-1) == "/" || path.substr(path.size()-1) == "\\")
 		slash = false;
 
 	struct dirent* de;
@@ -126,7 +126,9 @@ bool XVAPackage::Write(const std::string& file)
 		 * this code is subject to be changed, when new types of files
 		 * are added to the xva file!
 		 */
-		const char* file = strrchr(i->c_str(), '/');
+		const char* file_slash = strrchr(i->c_str(), '/');
+		const char* file_backslash = strrchr(i->c_str(), '\\');
+		const char* file = file_slash > file_backslash ? file_slash : file_backslash;
 		if (file != NULL)
 		{
 			file++;
@@ -139,12 +141,30 @@ bool XVAPackage::Write(const std::string& file)
 				strncpy(str, i->c_str(), len - 1);
 				str[len - 1] = '\0';
 
-				if (strrchr(str, '/') != NULL)
+				const char* sub_slash = strrchr(str, '/');
+				const char* sub_backslash = strrchr(str, '\\');
+				const char* sub = sub_slash > sub_backslash ? sub_slash : sub_backslash;
+				if (sub != NULL)
 				{
-					int len = strrchr(str, '/') - str;
+					int len = sub - str;
 					file = i->c_str() + len + 1;
 				}
 				delete [] str;
+			}
+		}
+		else
+		{
+			file = i->c_str();
+		}
+
+		/*
+		 * Normalize the file name path to use forward slashes for the tar header
+		 */
+		char clean_file[100];
+		snprintf(clean_file, sizeof(clean_file), "%s", file);
+		for (int idx = 0; clean_file[idx] != '\0'; idx++) {
+			if (clean_file[idx] == '\\') {
+				clean_file[idx] = '/';
 			}
 		}
 
@@ -153,7 +173,7 @@ bool XVAPackage::Write(const std::string& file)
 		 */
 		char header[512] = { 0 };
 		char* ptr = header;
-		snprintf(ptr, 100, "%s", file);
+		snprintf(ptr, 100, "%s", clean_file);
 		ptr += 100;
 		snprintf(ptr, 8, "%07d", 0);
 		ptr += 8;

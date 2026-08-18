@@ -3,3 +3,6 @@ CMakeFiles/
 Makefile
 cmake_install.cmake
 xva-img
+/build/
+/test_run/
+/run_tests.ps1

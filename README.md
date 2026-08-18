@@ -5,19 +5,47 @@ Citrix Xen uses a custom virtual appliance format for import/export called "XVA"
     
 Requirements
 ============
- 
+
+### Linux / macOS
  * CMake
  * g++ or clang++
  * libssl-dev
  * libxxhash-dev
+
+### Windows
+ * CMake (3.14+)
+ * G++ (via MinGW-w64)
+ * OpenSSL Development Libraries (libcrypto)
  
 To build
 =======
+
+### Linux / macOS
 Install g++ cmake make libssl-dev
 
     cmake .
     make
     make install
+
+### Windows
+1. Open a PowerShell terminal and create a build directory:
+    ```powershell
+    mkdir build
+    cd build
+    ```
+2. Configure using CMake and the MinGW Makefiles generator:
+    ```powershell
+    cmake -G "MinGW Makefiles" ..
+    ```
+3. Compile the executable:
+    ```powershell
+    mingw32-make
+    ```
+4. Place the required OpenSSL DLL (e.g. `libcrypto-3-x64.dll`) in the same directory as the compiled `xva-img.exe` or ensure it is accessible in your system `PATH`.
+5. (Optional) Run the integration tests to verify the build:
+    ```powershell
+    .\run_tests.ps1
+    ```
 
 Example
 =======

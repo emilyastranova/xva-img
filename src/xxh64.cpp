@@ -32,6 +32,7 @@
 
 #include <stdio.h>
 #include <xxhash.h>
+#undef XXH64
 #include "xxh64.hpp"
 
 std::string XVA::XXH64(const std::string& input)
